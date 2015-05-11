@@ -21,7 +21,7 @@ function go() {
  
 // The maximum number of players.  If there are already 
 // NUM_PLAYERS assigned, users won't be able to join the game.
-var NUM_PLAYERS = 4;
+var NUM_PLAYERS = 2;
  
 // The root of your game data.
 var GAME_LOCATION = 'https://bnmdmxr1f4u.firebaseio-demo.com/';
@@ -39,7 +39,7 @@ var PLAYER_DATA_LOCATION = 'player_data';
 function playGame(myPlayerNumber, name, justJoinedGame, gameRef) {
   var playerDataRef = gameRef.child(PLAYER_DATA_LOCATION).child(myPlayerNumber);
   alert('You are player number ' + myPlayerNumber + 
-      '.  Your data will be located at ' + playerDataRef.toString());
+      '.');
  
   if (justJoinedGame) {
     alert('Doing first-time initialization of data.');
