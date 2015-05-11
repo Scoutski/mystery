@@ -1,22 +1,108 @@
 $(document).ready(function() {
 
   var createBoard = function() {
-    for (var i = 0; i < 64; i++) {
-      $('<div></div>').attr('id', i).addClass('boardSquare').appendTo('#content');
+    var letters = "abcdefgh".split('');
+    for (var i = 0; i < 8; i++) {
+      for (var j = 1; j < 9; j++) {
+      $('<div></div>').attr('id', (letters[i] + j)).addClass('boardSquare').appendTo('#content');
+    }
     }
   }
 
   createBoard();
 
-var clearChat = function() {
-  myDataRef.remove();
-  $('#messagesDiv').html('');
-};
+  var name = prompt('What is your User ID?', 'guest');
 
+function go() {
+  // Consider adding '/<unique id>' if you have multiple games.
+  var gameRef = new Firebase(GAME_LOCATION);
+  assignPlayerNumberAndPlayGame(name, gameRef);
+};
+ 
+// The maximum number of players.  If there are already 
+// NUM_PLAYERS assigned, users won't be able to join the game.
+var NUM_PLAYERS = 4;
+ 
+// The root of your game data.
+var GAME_LOCATION = 'https://bnmdmxr1f4u.firebaseio-demo.com/';
+ 
+// A location under GAME_LOCATION that will store the list of 
+// players who have joined the game (up to MAX_PLAYERS).
+var PLAYERS_LOCATION = 'player_list';
+ 
+// A location under GAME_LOCATION that you will use to store data 
+// for each player (their game state, etc.)
+var PLAYER_DATA_LOCATION = 'player_data';
+ 
+ 
+// Called after player assignment completes.
+function playGame(myPlayerNumber, name, justJoinedGame, gameRef) {
+  var playerDataRef = gameRef.child(PLAYER_DATA_LOCATION).child(myPlayerNumber);
+  alert('You are player number ' + myPlayerNumber + 
+      '.  Your data will be located at ' + playerDataRef.toString());
+ 
+  if (justJoinedGame) {
+    alert('Doing first-time initialization of data.');
+    playerDataRef.set({name: name, state: 'game state'});
+  }
+}
+ 
+// Use transaction() to assign a player number, then call playGame().
+function assignPlayerNumberAndPlayGame(name, gameRef) {
+  var playerListRef = gameRef.child(PLAYERS_LOCATION);
+  var myPlayerNumber, alreadyInGame = false;
+ 
+  playerListRef.transaction(function(playerList) {
+    // Attempt to (re)join the given game. Notes:
+    //
+    // 1. Upon very first call, playerList will likely appear null (even if the
+    // list isn't empty), since Firebase runs the update function optimistically
+    // before it receives any data.
+    // 2. The list is assumed not to have any gaps (once a player joins, they 
+    // don't leave).
+    // 3. Our update function sets some external variables but doesn't act on
+    // them until the completion callback, since the update function may be
+    // called multiple times with different data.
+    if (playerList === null) {
+      playerList = [];
+    }
+ 
+    for (var i = 0; i < playerList.length; i++) {
+      if (playerList[i] === name) {
+        // Already seated so abort transaction to not unnecessarily update playerList.
+        alreadyInGame = true;
+        myPlayerNumber = i; // Tell completion callback which seat we have.
+        return;
+      }
+    }
+ 
+    if (i < NUM_PLAYERS) {
+      // Empty seat is available so grab it and attempt to commit modified playerList.
+      playerList[i] = name;  // Reserve our seat.
+      myPlayerNumber = i; // Tell completion callback which seat we reserved.
+      return playerList;
+    }
+ 
+    // Abort transaction and tell completion callback we failed to join.
+    myPlayerNumber = null;
+  }, function (error, committed) {
+    // Transaction has completed.  Check if it succeeded or we were already in
+    // the game and so it was aborted.
+    if (committed || alreadyInGame) {
+      playGame(myPlayerNumber, name, !alreadyInGame, gameRef);
+    } else {
+      alert('Game is full.  Can\'t join. :-(');
+    }
+  });
+}
+
+go();
 
   //Firebase chat code
+  
+
   var myDataRef = new Firebase('https://apzklqnbrhc.firebaseio-demo.com/');
-  var name = prompt("Your name?", "Guest");
+
   var sendMessage = function() {
     // if ($('#nameInput').val() === '' || $('#messageInput').val() === '') {
     //   $('<div/>').text('.').prepend($('<em/>').text('Please ensure you enter a name and message').appendTo($('#messagesDiv')));
@@ -65,86 +151,11 @@ var clearChat = function() {
   $('.boardSquare').on('mouseout', function() {
     $(this).css('background-color', '#ffffff');
   })
-
-// Firebase Presence
-  
-  var currentStatus = "★ online";
-
-  // Get a reference to the presence data in Firebase.
-  var userListRef = new Firebase("https://bnmdmxr1f4u.firebaseio-demo.com/");
-
-  // Generate a reference to a new location for my user with push.
-  var myUserRef = userListRef.push();
-
-  // Get a reference to my own presence status.
-  var connectedRef = new Firebase("https://bnmdmxr1f4u.firebaseio-demo.com//.info/connected");
-
-  connectedRef.on("value", function(isOnline) {
-    if (isOnline.val()) {
-      // If we lose our internet connection, we want ourselves removed from the list.
-      myUserRef.onDisconnect().remove();
-
-      // Set our initial online status.
-      setUserStatus("★ online");
-    }
-    else {
-
-      // We need to catch anytime we are marked as offline and then set the correct status. We
-      // could be marked as offline 1) on page load or 2) when we lose our internet connection
-      // temporarily.
-      setUserStatus(currentStatus);
-    }
-  });
-
-  // A helper function to let us set our own state.
-  function setUserStatus(status) {
-    // Set our status in the list of online users.
-    currentStatus = status;
-    myUserRef.set({ name: name, status: status });
-  }
-
-  function getMessageId(snapshot) {
-    return snapshot.key().replace(/[^a-z0-9\-\_]/gi,'');
-  }
-
-  // Update our GUI to show someone"s online status.
-  userListRef.on("child_added", function(snapshot) {
-    var user = snapshot.val();
-
-    $("<div/>")
-      .attr("id", getMessageId(snapshot))
-      .text(user.name + " is currently " + user.status)
-      .prependTo("#messagesDiv");
-  });
-
-  // Update our GUI to remove the status of a user who has left.
-  userListRef.on("child_removed", function(snapshot) {
-    $("#messageDiv").children("#" + getMessageId(snapshot))
-      .remove();
-  });
-
-  // Update our GUI to change a user"s status.
-  userListRef.on("child_changed", function(snapshot) {
-    var user = snapshot.val();
-    $("#messagesDiv").children("#" + getMessageId(snapshot))
-      .text(user.name + " is currently " + user.status);
-  });
-
-  // Use idle/away/back events created by idle.js to update our status information.
-  document.onIdle = function () {
-    setUserStatus("☆ idle");
-  }
-  document.onAway = function () {
-    setUserStatus("☄ away");
-  }
-  document.onBack = function (isIdle, isAway) {
-    setUserStatus("★ online");
-  }
-
-  setIdleTimeout(5000);
-  setAwayTimeout(10000);
-
 });
 
 
 
+var clearChat = function() {
+  myDataRef.remove();
+  $('#messagesDiv').html('');
+};
