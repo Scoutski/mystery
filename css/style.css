@@ -1,0 +1,14 @@
+#container {
+  width: 800px;
+  margin: 0 auto;
+}
+
+#messenger {
+  width: 300px;
+}
+
+#messagesDiv {
+  overflow: scroll;
+  height: 200px;
+  border: 1px solid black;
+}
