@@ -1,4 +1,14 @@
 $(document).ready(function() {
+
+  var createBoard = function() {
+    for (var i = 0; i < 64; i++) {
+      $('<div></div>').attr('id', i).addClass('boardSquare').appendTo('#content');
+    }
+  }
+
+  createBoard();
+
+
   //Firebase chat code
   var myDataRef = new Firebase('https://apzklqnbrhc.firebaseio-demo.com/');
 
@@ -7,6 +17,7 @@ $(document).ready(function() {
     //   $('<div/>').text('.').prepend($('<em/>').text('Please ensure you enter a name and message').appendTo($('#messagesDiv')));
     //   $('#messagesDiv')[0].scrollTop = $('#messagesDiv')[0].scrollHeight;
     // } else {
+
     var currentTime = new Date();
     var hour = ((currentTime.getHours() > 9) ? currentTime.getHours() : '0' + currentTime.getHours());
     var minute = ((currentTime.getMinutes() > 9) ? currentTime.getMinutes() : '0' + currentTime.getMinutes());
@@ -20,7 +31,7 @@ $(document).ready(function() {
       text: text
     });
     $('#messageInput').val('');
-  // }
+    // }
   }
 
   $('#messageInput').keypress(function(e) {
@@ -41,10 +52,21 @@ $(document).ready(function() {
     $('#messagesDiv')[0].scrollTop = $('#messagesDiv')[0].scrollHeight;
   };
 
-  var clearChat = function() {
-    myDataRef.remove();
-    $('#messagesDiv').html('');
-  };
 
   $('#clear').on('click', clearChat);
+
+  $('.boardSquare').on('mouseover', function() {
+    $(this).css('background-color', '#e7e7e7');
+  });
+  $('.boardSquare').on('mouseout', function() {
+    $(this).css('background-color', '#ffffff');
+  })
+
 });
+
+
+
+var clearChat = function() {
+  myDataRef.remove();
+  $('#messagesDiv').html('');
+};
