@@ -1,14 +1,10 @@
+
 <!DOCTYPE html>
 <html>
 
 <head>
   <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
   <meta charset="utf-8">
-  <script src='https://cdn.firebase.com/js/client/2.2.1/firebase.js'></script>
-  <script src='https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js'></script>
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
-  <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
-  <script src="js/main.js"></script>
   <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.css">
   <link rel='stylesheet' type='text/css' href='css/style.css'>
 </head>
@@ -25,10 +21,18 @@
         <button id='send'>Send</button>
       </div>
       <div id="content" class="col-md-8" class="row">
-        <h1>Battleships!</h1>
+        <div id="boardDiv">
+        </div>
+        <label id='checkBox'>vertical <input type='checkbox' id='checkboxActual'></label>
+        <input type='textbox' id='moveInput' placeholder='Enter Move'>
+        <button id='attack'>Attack!</button>
       </div>
     </div>
   </div>
+  <script src='https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js'></script>
+  <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+  <script src='js/firebase.js'></script>
+  <script src="js/main.js"></script>
 </body>
 
 </html>

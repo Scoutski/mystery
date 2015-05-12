@@ -20,14 +20,20 @@
   text-align: center;
 }
 
-#messagesDiv {
-  overflow: scroll;
-  height: 500px;
-  border: 1px solid black;
+#boardDiv {
+  height: 480px;
   margin-bottom: 5px;
 }
 
-#messagesDiv div {
+#checkBox {
+  margin-right: 10px;
+}
+
+#messagesDiv {
+  overflow: scroll;
+  height: 480px;
+  border: 1px solid black;
+  margin-bottom: 5px;
   font-size: 15px;
 }
 

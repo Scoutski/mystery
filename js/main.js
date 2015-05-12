@@ -1,161 +1,289 @@
-$(document).ready(function() {
+var gameLocation = 'https://shining-torch-1753.firebaseio.com/';
+var playerDataLocation = 'player_data';
+var myPlayerNumber = undefined;
+var name = prompt('What is your User ID?', 'guest');
+var letters = "abcdefgh".split('');
+var boardArray = [];
+var myShips = [];
+var fiveShip, fourShip, threeShip, twoShip;
+var rowIndex, startPoint;
+var firebaseData;
 
-  var createBoard = function() {
-    var letters = "abcdefgh".split('');
-    for (var i = 0; i < 8; i++) {
-      for (var j = 1; j < 9; j++) {
-      $('<div></div>').attr('id', (letters[i] + j)).addClass('boardSquare').appendTo('#content');
-    }
-    }
-  }
+function assignPlayer(name) {
+  var gameRef = new Firebase('https://shining-torch-1753.firebaseio.com');
+  var playerDataRef = gameRef.child('player_data');
 
-  createBoard();
+  playerDataRef.transaction(function(playerData) {
 
-  var name = prompt('What is your User ID?', 'guest');
-
-function go() {
-  // Consider adding '/<unique id>' if you have multiple games.
-  var gameRef = new Firebase(GAME_LOCATION);
-  assignPlayerNumberAndPlayGame(name, gameRef);
-};
- 
-// The maximum number of players.  If there are already 
-// NUM_PLAYERS assigned, users won't be able to join the game.
-var NUM_PLAYERS = 2;
- 
-// The root of your game data.
-var GAME_LOCATION = 'https://bnmdmxr1f4u.firebaseio-demo.com/';
- 
-// A location under GAME_LOCATION that will store the list of 
-// players who have joined the game (up to MAX_PLAYERS).
-var PLAYERS_LOCATION = 'player_list';
- 
-// A location under GAME_LOCATION that you will use to store data 
-// for each player (their game state, etc.)
-var PLAYER_DATA_LOCATION = 'player_data';
- 
- 
-// Called after player assignment completes.
-function playGame(myPlayerNumber, name, justJoinedGame, gameRef) {
-  var playerDataRef = gameRef.child(PLAYER_DATA_LOCATION).child(myPlayerNumber);
-  alert('You are player number ' + myPlayerNumber + 
-      '.');
- 
-  if (justJoinedGame) {
-    alert('Doing first-time initialization of data.');
-    playerDataRef.set({name: name, state: 'game state'});
-  }
-}
- 
-// Use transaction() to assign a player number, then call playGame().
-function assignPlayerNumberAndPlayGame(name, gameRef) {
-  var playerListRef = gameRef.child(PLAYERS_LOCATION);
-  var myPlayerNumber, alreadyInGame = false;
- 
-  playerListRef.transaction(function(playerList) {
-    // Attempt to (re)join the given game. Notes:
-    //
-    // 1. Upon very first call, playerList will likely appear null (even if the
-    // list isn't empty), since Firebase runs the update function optimistically
-    // before it receives any data.
-    // 2. The list is assumed not to have any gaps (once a player joins, they 
-    // don't leave).
-    // 3. Our update function sets some external variables but doesn't act on
-    // them until the completion callback, since the update function may be
-    // called multiple times with different data.
-    if (playerList === null) {
-      playerList = [];
+    if (!playerData) {
+      playerData = [];
     }
- 
-    for (var i = 0; i < playerList.length; i++) {
-      if (playerList[i] === name) {
-        // Already seated so abort transaction to not unnecessarily update playerList.
-        alreadyInGame = true;
-        myPlayerNumber = i; // Tell completion callback which seat we have.
-        return;
-      }
-    }
- 
-    if (i < NUM_PLAYERS) {
-      // Empty seat is available so grab it and attempt to commit modified playerList.
-      playerList[i] = name;  // Reserve our seat.
-      myPlayerNumber = i; // Tell completion callback which seat we reserved.
-      return playerList;
-    }
- 
-    // Abort transaction and tell completion callback we failed to join.
-    myPlayerNumber = null;
-  }, function (error, committed) {
-    // Transaction has completed.  Check if it succeeded or we were already in
-    // the game and so it was aborted.
-    if (committed || alreadyInGame) {
-      playGame(myPlayerNumber, name, !alreadyInGame, gameRef);
+    if (playerData.length < 2) {
+      playerData.push({
+        name: name,
+        state: 'playing',
+        ready: false,
+        myTurn: false,
+        shipsAt: []
+      });
+      myPlayerNumber = playerData.length - 1;
+      //Player joins game, Status Message
+      var $div = $('<div/>').text($('#messageInput').val()).prepend($('<em/>').text('Welcome ' + name + ', you are playing')).appendTo($('#messagesDiv'));
+      $('#messagesDiv')[0].scrollTop = $('#messagesDiv')[0].scrollHeight;
     } else {
-      alert('Game is full.  Can\'t join. :-(');
+      //Nothing is created, Status message
+      var $div = $('<div/>').text($('#messageInput').val()).prepend($('<em/>').text('Unfortunately ' + name + ', the game is full.')).appendTo($('#messagesDiv'));
+      $('#messagesDiv')[0].scrollTop = $('#messagesDiv')[0].scrollHeight;
     }
+
+    playerDataRef.onDisconnect().remove();
+    return playerData;
   });
 }
 
-go();
+assignPlayer(name);
 
-  //Firebase chat code
-  
+//From here down is the code for the firebase chat.
+var myDataRef = new Firebase('https://shining-torch-1753.firebaseio.com/chat/');
+var sendMessage = function() {
+  // if ($('#nameInput').val() === '' || $('#messageInput').val() === '') {
+  //   $('<div/>').text('.').prepend($('<em/>').text('Please ensure you enter a name and message').appendTo($('#messagesDiv')));
+  //   $('#messagesDiv')[0].scrollTop = $('#messagesDiv')[0].scrollHeight;
+  // } else {
 
-  var myDataRef = new Firebase('https://apzklqnbrhc.firebaseio-demo.com/');
+  var currentTime = new Date();
+  var hour = ((currentTime.getHours() > 9) ? currentTime.getHours() : '0' + currentTime.getHours());
+  var minute = ((currentTime.getMinutes() > 9) ? currentTime.getMinutes() : '0' + currentTime.getMinutes());
+  var second = ((currentTime.getSeconds() > 9) ? currentTime.getSeconds() : '0' + currentTime.getSeconds());
+  var time = (hour + ":" + minute + ":" + second);
+  var text = $('#messageInput').val();
+  myDataRef.push({
+    time: time,
+    name: name,
+    text: text
+  });
+  $('#messageInput').val('');
+  // }
+}
 
-  var sendMessage = function() {
-    // if ($('#nameInput').val() === '' || $('#messageInput').val() === '') {
-    //   $('<div/>').text('.').prepend($('<em/>').text('Please ensure you enter a name and message').appendTo($('#messagesDiv')));
-    //   $('#messagesDiv')[0].scrollTop = $('#messagesDiv')[0].scrollHeight;
-    // } else {
-
-    var currentTime = new Date();
-    var hour = ((currentTime.getHours() > 9) ? currentTime.getHours() : '0' + currentTime.getHours());
-    var minute = ((currentTime.getMinutes() > 9) ? currentTime.getMinutes() : '0' + currentTime.getMinutes());
-    var second = ((currentTime.getSeconds() > 9) ? currentTime.getSeconds() : '0' + currentTime.getSeconds());
-    var time = (hour + ":" + minute + ":" + second);
-    var text = $('#messageInput').val();
-    myDataRef.push({
-      time: time,
-      name: name,
-      text: text
-    });
-    $('#messageInput').val('');
-    // }
+$('#messageInput').keypress(function(e) {
+  if (e.keyCode == 13) {
+    sendMessage();
   }
-
-  $('#messageInput').keypress(function(e) {
-    if (e.keyCode == 13) {
-      sendMessage();
-    }
-  });
-
-  $('#send').on('click', sendMessage);
-
-  myDataRef.on('child_added', function(snapshot) {
-    var message = snapshot.val();
-    displayChatMessage(message.time, message.name, message.text);
-  });
-
-  function displayChatMessage(time, name, text) {
-    $('<div/>').text(text).prepend($('<em/>').text(time + ' - ' + name + ': ')).appendTo($('#messagesDiv'));
-    $('#messagesDiv')[0].scrollTop = $('#messagesDiv')[0].scrollHeight;
-  };
-
-
-  $('#clear').on('click', clearChat);
-
-  $('.boardSquare').on('mouseover', function() {
-    $(this).css('background-color', '#e7e7e7');
-  });
-  $('.boardSquare').on('mouseout', function() {
-    $(this).css('background-color', '#ffffff');
-  })
 });
 
+$('#send').on('click', sendMessage);
 
+myDataRef.on('child_added', function(snapshot) {
+  var message = snapshot.val();
+  displayChatMessage(message.time, message.name, message.text);
+});
+
+function displayChatMessage(time, name, text) {
+  $('<div/>').text(text).prepend($('<em/>').text(time + ' - ' + name + ': ')).appendTo($('#messagesDiv'));
+  $('#messagesDiv')[0].scrollTop = $('#messagesDiv')[0].scrollHeight;
+};
 
 var clearChat = function() {
-  myDataRef.remove();
+  var quickRemove = new Firebase('https://shining-torch-1753.firebaseio.com/chat/');
+  quickRemove.remove();
   $('#messagesDiv').html('');
 };
+
+$('#clear').on('click', clearChat);
+// THIS IS WHERE ALL THE FIREBASE SETUP STUFF STOPS, DO NOT TOUCH ANYTHING ABOVE HERE OR YOU WILL HATE YOURSELF FOR A LONG TIME (A REALLY LONG TIME!!).
+
+//Sets up the board
+var createBoard = function() {
+  for (var i = 0; i < 8; i++) {
+    var tempArray = [];
+    for (var j = 1; j < 9; j++) {
+      $('<div></div>').attr('id', (letters[i] + j)).addClass('boardSquare').appendTo('#boardDiv');
+      tempArray.push(letters[i] + j);
+    }
+    boardArray.push(tempArray);
+  }
+}
+createBoard();
+
+var setupShips = function() {
+  firebaseData = new Firebase(('https://shining-torch-1753.firebaseio.com/player_data' + myPlayerNumber));
+  if ($("#checkboxActual").is(':checked')) {
+    verticalSetup();
+  } else {
+    horizontalSetup();
+  }
+}
+
+var horizontalSetup = function() {
+  $('.boardSquare').on('click', function() {
+    if ($(this).text() === '') {
+      if (!fiveShip) {
+        var id = $(this).attr('id');
+        for (var i = 0; i < boardArray.length; i++) {
+          if (boardArray[i].indexOf(id) >= 0 && (boardArray[i].indexOf(id) <= 3)) {
+            rowIndex = i;
+            startPoint = boardArray[i].indexOf(id);
+            break;
+          }
+        }
+        if (startPoint) {
+          fiveShip = true;
+          for (var i = 0; i < 5; i++) {
+            $('#' + (boardArray[rowIndex].slice(startPoint, (startPoint + 5)))[i]).text('x');
+            myShips.push(boardArray[rowIndex][startPoint + i]);
+          }
+          console.log('Five ship placed at ' + $(this).attr('id'));
+          rowIndex = undefined;
+          startPoint = undefined;
+        }
+      } else if (!fourShip) {
+        var id = $(this).attr('id');
+        for (var i = 0; i < boardArray.length; i++) {
+          if (boardArray[i].indexOf(id) >= 0 && (boardArray[i].indexOf(id) <= 4)) {
+            rowIndex = i;
+            startPoint = boardArray[i].indexOf(id);
+          }
+        }
+        if (startPoint) {
+          fourShip = true;
+          for (var i = 0; i < 4; i++) {
+            $('#' + (boardArray[rowIndex].slice(startPoint, (startPoint + 4)))[i]).text('x');
+            myShips.push(boardArray[rowIndex][startPoint + i]);
+          }
+          console.log('Four ship placed at ' + $(this).attr('id'));
+          rowIndex = undefined;
+          startPoint = undefined;
+        }
+      } else if (!threeShip) {
+        var id = $(this).attr('id');
+        for (var i = 0; i < boardArray.length; i++) {
+          if (boardArray[i].indexOf(id) >= 0 && (boardArray[i].indexOf(id) <= 5)) {
+            rowIndex = i;
+            startPoint = boardArray[i].indexOf(id);
+          }
+        }
+        if (startPoint) {
+          threeShip = true;
+          for (var i = 0; i < 3; i++) {
+            $('#' + (boardArray[rowIndex].slice(startPoint, (startPoint + 3)))[i]).text('x');
+            myShips.push(boardArray[rowIndex][startPoint + i]);
+          }
+          console.log('Three ship placed at ' + $(this).attr('id'));
+          rowIndex = undefined;
+          startPoint = undefined;
+        }
+      } else if (!twoShip) {
+        var id = $(this).attr('id');
+        for (var i = 0; i < boardArray.length; i++) {
+          if (boardArray[i].indexOf(id) >= 0 && (boardArray[i].indexOf(id) <= 6)) {
+            rowIndex = i;
+            startPoint = boardArray[i].indexOf(id);
+          }
+        }
+        if (startPoint) {
+          twoShip = true;
+          for (var i = 0; i < 2; i++) {
+            $('#' + (boardArray[rowIndex].slice(startPoint, (startPoint + 2)))[i]).text('x');
+            myShips.push(boardArray[rowIndex][startPoint + i]);
+          }
+          console.log('Two ship placed at ' + $(this).attr('id'));
+          rowIndex = undefined;
+          startPoint = undefined;
+        }
+      }
+    } else {
+      console.log('ship at this position!');
+    }
+  })
+}
+
+var verticalSetup = function() {
+  $('.boardSquare').on('click', function() {
+    if ($(this).text() === '') {
+      var id = $(this).attr('id');
+      if (!fiveShip) {
+        for (var i = 0; i < boardArray.length; i++) {
+          if (boardArray[i].indexOf(id) >= 0 && (boardArray[i].indexOf(id) <= 3)) {
+            rowIndex = i;
+            startPoint = boardArray[i].indexOf(id);
+            break;
+          }
+        }
+        if (startPoint) {
+          fiveShip = true;
+          for (var i = 0; i < 5; i++) {
+            $('#' + (boardArray[rowIndex + i][startPoint])).text('x');
+            myShips.push(boardArray[rowIndex + i][startPoint]);
+          }
+          console.log('Five ship placed at ' + $(this).attr('id'));
+          rowIndex = undefined;
+          startPoint = undefined;
+        }
+      } else if (!fourShip) {
+        for (var i = 0; i < boardArray.length; i++) {
+          if (boardArray[i].indexOf(id) >= 0 && (boardArray[i].indexOf(id) <= 4)) {
+            rowIndex = i;
+            startPoint = boardArray[i].indexOf(id);
+          }
+        }
+        if (startPoint) {
+          fourShip = true;
+          myShips.push(boardArray[rowIndex].slice(startPoint, (startPoint + 4)));
+          for (var i = 0; i < 4; i++) {
+            $('#' + (boardArray[rowIndex].slice(startPoint, (startPoint + 4)))[i]).text('x');
+          }
+          console.log('Four ship placed at ' + $(this).attr('id'));
+          rowIndex = undefined;
+          startPoint = undefined;
+        }
+      } else if (!threeShip) {
+        for (var i = 0; i < boardArray.length; i++) {
+          if (boardArray[i].indexOf(id) >= 0 && (boardArray[i].indexOf(id) <= 5)) {
+            rowIndex = i;
+            startPoint = boardArray[i].indexOf(id);
+          }
+        }
+        if (startPoint) {
+          threeShip = true;
+          myShips.push(boardArray[rowIndex].slice(startPoint, (startPoint + 3)));
+          for (var i = 0; i < 3; i++) {
+            $('#' + (boardArray[rowIndex].slice(startPoint, (startPoint + 3)))[i]).text('x');
+          }
+          console.log('Three ship placed at ' + $(this).attr('id'));
+          rowIndex = undefined;
+          startPoint = undefined;
+        }
+      } else if (!twoShip) {
+        for (var i = 0; i < boardArray.length; i++) {
+          if (boardArray[i].indexOf(id) >= 0 && (boardArray[i].indexOf(id) <= 6)) {
+            rowIndex = i;
+            startPoint = boardArray[i].indexOf(id);
+          }
+        }
+        if (startPoint) {
+          twoShip = true;
+          myShips.push(boardArray[rowIndex].slice(startPoint, (startPoint + 2)));
+          for (var i = 0; i < 2; i++) {
+            $('#' + (boardArray[rowIndex].slice(startPoint, (startPoint + 2)))[i]).text('x');
+          }
+          console.log('Two ship placed at ' + $(this).attr('id'));
+          rowIndex = undefined;
+          startPoint = undefined;
+        }
+      }
+    } else {
+      console.log('ship at this position!');
+    }
+  })
+}
+
+$('.boardSquare').on('click', setupShips);
+
+
+$('.boardSquare').on('mouseover', function() {
+  $(this).css('background-color', '#e7e7e7');
+});
+$('.boardSquare').on('mouseout', function() {
+  $(this).css('background-color', '#ffffff');
+})
