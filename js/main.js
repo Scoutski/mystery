@@ -1,57 +1,65 @@
-var gameLocation = 'https://shining-torch-1753.firebaseio.com/';
-var playerDataLocation = 'player_data';
 var myPlayerNumber = undefined;
+var enemyPlayerNumber = undefined;
 var name = prompt('What is your User ID?', 'guest');
 var letters = "abcdefgh".split('');
 var boardArray = [];
 var myShips = [];
-var fiveShip, fourShip, threeShip, twoShip;
-var rowIndex, startPoint;
-var isSetup = false;
+var currentShipLength = 5;
 var readyForData = false;
 var firebaseData;
-var enemyData;
+var enemyShips;
 
-//Still need to assign the player number.
+//
+//===============
+// SECTION BREAK
+//===============
+//
 
-function assignPlayer(name) {
-  var gameRef = new Firebase('https://shining-torch-1753.firebaseio.com');
-  var playerDataRef = gameRef.child('player_data');
-
-  playerDataRef.transaction(function(playerData) {
-
-    if (!playerData) {
-      playerData = [];
-    }
-    if (playerData.length < 2) {
-      playerData.push({
-        name: name,
-        state: 'playing',
-      });
-      //Player joins game, Status Message
-      var $div = $('<div/>').text($('#messageInput').val()).prepend($('<em/>').text('Welcome ' + name + ', you are playing')).appendTo($('#messagesDiv'));
-      $('#messagesDiv')[0].scrollTop = $('#messagesDiv')[0].scrollHeight;
+//
+//These functions are responsible for pushing the first two users who log into the page on to the linked fireBase database and to set a local myPlayerNumber variable for use during the play phase of the game.
+function assignPlayer() {
+  //Function Purpose:
+  //This function creates information for the player in the Firebase database so that their dataset reference can be accessed by the other player to determine a winner later. It also assigns the player number and enemy player number for use later in the program.
+  debugger;
+  var gameRef = new Firebase('https://shining-torch-1753.firebaseio.com/player_data');
+  // var playerDataRef = gameRef.child('player_data');
+  var gameTempArray = getSynchronizedArray(gameRef);
+  setTimeout(function() {
+    if (gameTempArray.length === 0) {
+      var disconnectHandler = new Firebase('https://shining-torch-1753.firebaseio.com/player_data/');
+      disconnectHandler.onDisconnect().remove();
+      var playerZeroRef = gameRef.child('0');
+      gameTempArray = getSynchronizedArray(playerZeroRef);
+      gameTempArray.$set('name', name);
+      myPlayerNumber = 0;
+      enemyPlayerNumber = 1;
+    } else if (gameTempArray.length === 1) {
+      var disconnectHandler = new Firebase('https://shining-torch-1753.firebaseio.com/player_data/');
+      disconnectHandler.onDisconnect().remove();
+      var playerOneRef = gameRef.child('1');
+      gameTempArray = getSynchronizedArray(playerOneRef);
+      gameTempArray.$set('name', name);
+      myPlayerNumber = 1;
+      enemyPlayerNumber = 0;
     } else {
-      //Nothing is created, Status message
-      var $div = $('<div/>').text($('#messageInput').val()).prepend($('<em/>').text('Unfortunately ' + name + ', the game is full.')).appendTo($('#messagesDiv'));
-      $('#messagesDiv')[0].scrollTop = $('#messagesDiv')[0].scrollHeight;
+      console.log('game is full, sorry.')
     }
-
-    playerDataRef.onDisconnect().remove();
-    return playerData;
-  });
+  }, 2000);
 }
 
-assignPlayer(name);
+assignPlayer();
+//End of the initial player/database setup section.
 
-//From here down is the code for the firebase chat.
+//
+//===============
+// SECTION BREAK
+//===============
+//
+
+//
+//From here down is the code for the Firebase chat.
 var myDataRef = new Firebase('https://shining-torch-1753.firebaseio.com/chat/');
 var sendMessage = function() {
-  // if ($('#nameInput').val() === '' || $('#messageInput').val() === '') {
-  //   $('<div/>').text('.').prepend($('<em/>').text('Please ensure you enter a name and message').appendTo($('#messagesDiv')));
-  //   $('#messagesDiv')[0].scrollTop = $('#messagesDiv')[0].scrollHeight;
-  // } else {
-
   var currentTime = new Date();
   var hour = ((currentTime.getHours() > 9) ? currentTime.getHours() : '0' + currentTime.getHours());
   var minute = ((currentTime.getMinutes() > 9) ? currentTime.getMinutes() : '0' + currentTime.getMinutes());
@@ -92,227 +100,262 @@ var clearChat = function() {
 };
 
 $('#clear').on('click', clearChat);
-// THIS IS WHERE ALL THE FIREBASE SETUP STUFF STOPS, DO NOT TOUCH ANYTHING ABOVE HERE OR YOU WILL HATE YOURSELF FOR A LONG TIME (A REALLY LONG TIME!!).
+// Firebase Chat Code above
+//
 
+//
+//===============
+// SECTION BREAK
+//===============
+//
+
+//
 //Sets up the board
 var createBoard = function() {
+  //Function Purpose:
+  //This function is 2 for loops set up to be nested to create an 8x8 grid on the webpage.
   for (var i = 0; i < 8; i++) {
     var tempArray = [];
     for (var j = 1; j < 9; j++) {
-      $('<div></div>').attr('id', (letters[i] + j)).addClass('boardSquare').appendTo('#boardDiv');
+      $('<div></div>').attr('id', (letters[i] + j)).addClass('myBoardSquare').appendTo('#boardDiv');
       tempArray.push(letters[i] + j);
     }
     boardArray.push(tempArray);
   }
 }
 createBoard();
+//Board creation ended
+//
 
-var setupShips = function() {
-  var id = $(this).attr('id');
-  if ($("#checkboxActual").is(':checked')) {
-    verticalSetup();
+//
+//===============
+// SECTION BREAK
+//===============
+//
+
+//The functions in the section are responsible for setting up your own game.
+var placementPhase = function() {
+  $('.myBoardSquare').on('click', function() {
+    //Function purpose:
+    //This function handles clicks at the start of the game while ships are being placed on the board. It determines the outer array index and inner array index so they can be passed to the required functions for ship placement.
+    var $boardID = $(this).attr('id').split('');
+    var rowIndex = letters.indexOf($boardID[0]);
+    var columnIndex = (parseInt($boardID[1]) - 1);
+    var shipLength = currentShipLength;
+    if (shipLength === 0) {
+      return;
+    }
+    if ($("#checkboxActual").is(':checked')) {
+      console.log('Attempting to place ship with length ' + shipLength + ' vertically at position ' + rowIndex + ',' + columnIndex);
+      verticalPlace(shipLength, rowIndex, columnIndex);
+    } else {
+      console.log('Attempting to place ship with length ' + shipLength + ' horizontally at position ' + rowIndex + ',' + columnIndex);
+      horizontalPlace(shipLength, rowIndex, columnIndex);
+    }
+  });
+}
+
+placementPhase();
+//This just starts the game right now, might tie this to a start game button later where we check that there are two players first.
+
+var checkForCompleteSetup = function() {
+  //Function Purpose:
+  //This function determines if all the ships have been placed and runs automatically 
+  if (currentShipLength < 2) {
+    console.log('all ships placed, cancelling initial event handler.')
+    $('.myBoardSquare').off('click');
+    pushShipsToFirebase();
+    checkForStart();
+    return;
+  }
+}
+
+var pushShipsToFirebase = function() {
+  //Function Purpose:
+  //
+  setTimeout(function() {
+    var tempLocation = 'https://shining-torch-1753.firebaseio.com/player_data/' + myPlayerNumber + '/';
+    var tempFirebase = new Firebase(tempLocation);
+    var tempSyncArray = getSynchronizedArray(tempFirebase);
+    tempSyncArray.$set('Ships', myShips);
+    tempSyncArray.$set('ready', true);
+    console.log(tempSyncArray[0][0]);
+  }, 1000);
+}
+
+var horizontalPlace = function(currentShip, rIndex, cIndex) {
+  //Function purpose:
+  //This function is wholly responsible for drawing the markers on the board to show the location of the ships that have been placed horizontally and for passing the #id's of the ship locations into the myShips array. 
+  if (horizontalCollisionCheck(currentShip, rIndex, cIndex) &&
+    legalHorizontalMove(currentShip, cIndex)) {
+    for (var i = 0; i < currentShip; i++) {
+      $('#' + boardArray[rIndex][cIndex + i]).text('O');
+      myShips.push(boardArray[rIndex][cIndex + i]);
+    }
+    currentShipLength--;
+    checkForCompleteSetup();
+    return;
   } else {
-    horizontalSetup();
+    console.log('Placement did not pass move checks.')
+    return;
   }
-  if (fiveShip && fourShip && threeShip && twoShip) {
-    firebaseData = new Firebase('https://shining-torch-1753.firebaseio.com/player_data/');
-    firebaseData.child("" + myPlayerNumber).push({
-        theShips: myShips
-      });
-    $('.boardSquare').off('click');
-  }
-  }
+}
 
-var horizontalSetup = function() {
-  $('.boardSquare').on('click', function() {
-    if ($(this).text() === '') {
-      if (!fiveShip) {
-        var id = $(this).attr('id');
-        for (var i = 0; i < boardArray.length; i++) {
-          if (boardArray[i].indexOf(id) >= 0 && (boardArray[i].indexOf(id) <= 3)) {
-            rowIndex = i;
-            startPoint = boardArray[i].indexOf(id);
-            break;
-          }
-        }
-        if (startPoint) {
-          fiveShip = true;
-          for (var i = 0; i < 5; i++) {
-            $('#' + (boardArray[rowIndex][startPoint + i])).text('x');
-            myShips.push(boardArray[rowIndex][startPoint + i]);
-          }
-          console.log('Five ship placed at ' + $(this).attr('id'));
-          rowIndex = undefined;
-          startPoint = undefined;
-        }
-      } else if (!fourShip) {
-        var id = $(this).attr('id');
-        for (var i = 0; i < boardArray.length; i++) {
-          if (boardArray[i].indexOf(id) >= 0 && (boardArray[i].indexOf(id) <= 4)) {
-            rowIndex = i;
-            startPoint = boardArray[i].indexOf(id);
-          }
-        }
-        if (startPoint) {
-          fourShip = true;
-          for (var i = 0; i < 4; i++) {
-            $('#' + (boardArray[rowIndex][startPoint + i])).text('x');
-            myShips.push(boardArray[rowIndex][startPoint + i]);
-          }
-          console.log('Four ship placed at ' + $(this).attr('id'));
-          rowIndex = undefined;
-          startPoint = undefined;
-        }
-      } else if (!threeShip) {
-        var id = $(this).attr('id');
-        for (var i = 0; i < boardArray.length; i++) {
-          if (boardArray[i].indexOf(id) >= 0 && (boardArray[i].indexOf(id) <= 5)) {
-            rowIndex = i;
-            startPoint = boardArray[i].indexOf(id);
-          }
-        }
-        if (startPoint) {
-          threeShip = true;
-          for (var i = 0; i < 3; i++) {
-            $('#' + (boardArray[rowIndex][startPoint + i])).text('x');
-            myShips.push(boardArray[rowIndex][startPoint + i]);
-          }
-          console.log('Three ship placed at ' + $(this).attr('id'));
-          rowIndex = undefined;
-          startPoint = undefined;
-        }
-      } else if (!twoShip) {
-        var id = $(this).attr('id');
-        for (var i = 0; i < boardArray.length; i++) {
-          if (boardArray[i].indexOf(id) >= 0 && (boardArray[i].indexOf(id) <= 6)) {
-            rowIndex = i;
-            startPoint = boardArray[i].indexOf(id);
-          }
-        }
-        if (startPoint) {
-          twoShip = true;
-          for (var i = 0; i < 2; i++) {
-            $('#' + (boardArray[rowIndex][startPoint + i])).text('x');
-            myShips.push(boardArray[rowIndex][startPoint + i]);
-          }
-          console.log('Two ship placed at ' + $(this).attr('id'));
-          rowIndex = undefined;
-          startPoint = undefined;
-          readyToPlay();
-        }
-      }
-    } else {
-      console.log('ship at this position!');
+var verticalPlace = function(currentShip, rIndex, cIndex) {
+  //Function purpose:
+  //This function is wholly responsible for drawing the markers on the board to show the location of the ships that have been placed vertically and for passing the #id's of the ship locations into the myShips array.
+  if (verticalCollisionCheck(currentShip, rIndex, cIndex) &&
+    legalVerticalMove(currentShip, rIndex)) {
+    for (var i = 0; i < currentShip; i++) {
+      $('#' + boardArray[rIndex + i][cIndex]).text('O');
+      myShips.push(boardArray[rIndex + i][cIndex]);
     }
-    $('.boardSquare').off('click');
-    $('.boardSquare').on('click', setupShips);
-  })
+    currentShipLength--;
+    checkForCompleteSetup();
+    return;
+  } else {
+    console.log('Placement did not pass move checks.')
+    return;
+  }
 }
 
-var verticalSetup = function() {
-  $('.boardSquare').on('click', function() {
-    if ($(this).text() === '') {
-      var id = $(this).attr('id');
-      if (!fiveShip) {
-        for (var i = 0; i < boardArray.length; i++) {
-          if (boardArray[i].indexOf(id) >= 0 && (i <= 3)) {
-            rowIndex = i;
-            startPoint = boardArray[i].indexOf(id);
-            break;
-          }
-        }
-        if (startPoint) {
-          fiveShip = true;
-          for (var i = 0; i < 5; i++) {
-            $('#' + (boardArray[rowIndex + i][startPoint])).text('x');
-            myShips.push(boardArray[rowIndex + i][startPoint]);
-          }
-          console.log('Five ship placed at ' + $(this).attr('id'));
-          rowIndex = undefined;
-          startPoint = undefined;
-        }
-      } else if (!fourShip) {
-        for (var i = 0; i < boardArray.length; i++) {
-          if (boardArray[i].indexOf(id) >= 0 && (i <= 4)) {
-            rowIndex = i;
-            startPoint = boardArray[i].indexOf(id);
-            break;
-          }
-        }
-        if (startPoint) {
-          fourShip = true;
-          for (var i = 0; i < 4; i++) {
-            $('#' + (boardArray[rowIndex + i][startPoint])).text('x');
-            myShips.push(boardArray[rowIndex + i][startPoint]);
-          }
-          console.log('Four ship placed at ' + $(this).attr('id'));
-          rowIndex = undefined;
-          startPoint = undefined;
-        }
-      } else if (!threeShip) {
-        for (var i = 0; i < boardArray.length; i++) {
-          if (boardArray[i].indexOf(id) >= 0 && (i <= 5)) {
-            rowIndex = i;
-            startPoint = boardArray[i].indexOf(id);
-            break;
-          }
-        }
-        if (startPoint) {
-          threeShip = true;
-          for (var i = 0; i < 3; i++) {
-            $('#' + (boardArray[rowIndex + i][startPoint])).text('x');
-            myShips.push(boardArray[rowIndex + i][startPoint]);
-          }
-          console.log('Three ship placed at ' + $(this).attr('id'));
-          rowIndex = undefined;
-          startPoint = undefined;
-        }
-      } else if (!twoShip) {
-        for (var i = 0; i < boardArray.length; i++) {
-          if (boardArray[i].indexOf(id) >= 0 && (i <= 6)) {
-            rowIndex = i;
-            startPoint = boardArray[i].indexOf(id);
-            break;
-          }
-        }
-        if (startPoint) {
-          twoShip = true;
-          for (var i = 0; i < 2; i++) {
-            $('#' + (boardArray[rowIndex + i][startPoint])).text('x');
-            myShips.push(boardArray[rowIndex + i][startPoint]);
-          }
-          console.log('Two ship placed at ' + $(this).attr('id'));
-          rowIndex = undefined;
-          startPoint = undefined;
-          readyToPlay();
-        }
-      }
-    } else {
-      console.log('ship at this position!');
+var horizontalCollisionCheck = function(shipLength, rIndex, sIndex) {
+  //Function purpose:
+  //Should ensure that no other ships are on any of the squares that this ship plans to occupy on the board horizontally.
+  for (var i = 0; i < shipLength; i++) {
+    if ($('#' + (boardArray[rIndex][sIndex + i])).text() === 'O') {
+      console.log('not a valid horizontal move, there is a ship in the way.')
+      return false;
     }
-    $('.boardSquare').off('click');
-    $('.boardSquare').on('click', setupShips);
-  })
+  }
+  console.log('valid placement, no horizontal collision')
+  return true;
 }
 
-var readyToPlay = function () {
-  $('.boardSquare').off();
-  console.log('ship setup complete!');
-  isSetup = true;
+var verticalCollisionCheck = function(shipLength, rIndex, cIndex) {
+  //Function purpose:
+  //Should ensure that no other ships are on any of the squares that this ship plans to occupy on the board vertically.
+  for (var i = 0; i < shipLength; i++) {
+    if ($('#' + (boardArray[rIndex + i][cIndex])).text() === 'O') {
+      console.log('not a valid vertical move, there is a ship in the way.')
+      return false;
+    }
+  }
+  console.log('valid placement, no vertical collision')
+  return true;
 }
 
+var legalHorizontalMove = function(shipLength, cIndex) {
+  //Function purpose:
+  //Checks that placing the ship horizontally will not exceed the length of the board.
+  if (cIndex + shipLength <= 8) {
+    console.log('This is a legal horizontal move.');
+    return true;
+  } else {
+    console.log('This is an illegal horizontal move.');
+    return false;
+  }
+}
+
+var legalVerticalMove = function(shipLength, rIndex) {
+    //Function purpose:
+    //Checks that placing the ship horizontally will not exceed the length of the board.
+    if (rIndex + shipLength <= 8) {
+      console.log('This is a legal vertical move.');
+      return true;
+    } else {
+      console.log('This is an illegal vertical move.');
+      return false;
+    }
+}
+
+// var drawReadyButton = function() {
+//   //Function Purpose:
+//   //This function draws a button at the top of the page for both players to update the database to let it know that they have drawn their ships on the board and so the local version can download a copy of the enemies ship.
+//   var $readyButton = $('<button id="readybutton">START!</button>');
+//   $readyButton.appendTo($('#header'));
+//   $('#readybutton').css('margin-bottom', '10px');
+//   readyButtonHandler();
+// }
+
+// var readyButtonHandler = function() {
+//   //Function Purpose:
+//   //This function checks that the other player has set up all of their ships so that the game can begin, the game won't actually start until both players have hit their ready button.
+//   $('#readybutton').on('click', function() {
+//     var goTime = checkForStart();
+//     if (goTime) {
+//         var tempLocation = 'https://shining-torch-1753.firebaseio.com/player_data/' + enemyPlayerNumber + '/';
+//         var tempFirebase = new Firebase(tempLocation);
+//         var tempSyncArray = getSynchronizedArray(tempFirebase);
+//         enemyShips = tempSyncArray[0];
+//         console.log('Your opponent is ' + tempSyncArray[1] + ', good luck!')
+//         $('#readybutton').off('click');
+//         $('#readybutton').remove();
+//         startGame();
+//       return;
+//     } else {
+//       console.log('Opponent is not ready yet');
+//     }
+//   });
+// }
+
+var checkForStart = function() {
+  //Function Purpose:
+  //This function checks the player_data folder for the opposite player to determine if their board has ben placed and if their ships can be downloaded. If they are ready, it downloads the ships locally.
+  var startTimer = setInterval(function() {
+    var tempLocation = 'https://shining-torch-1753.firebaseio.com/player_data/' + enemyPlayerNumber + '/';
+    var tempFirebase = new Firebase(tempLocation);
+    var tempSyncArray = getSynchronizedArray(tempFirebase);
+    if (tempSyncArray[2] === true) {
+      clearInterval(startTimer);
+      enemyShips = tempSyncArray[0];
+      startGame();
+      return;
+    } else {
+    console.log('Opponent still getting ready...')
+    }
+  }, 3000);
+}
+//End of game set up functions.
 //
+
 //
-// This secion is magic from https://www.firebase.com/blog/2014-05-06-synchronized-arrays.html
-// Allows me to pull all the data down from the firebase, Although this talks about a Synchronized Array
-// it is really just a static array.
+//===============
+// SECTION BREAK
+//===============
 //
+
 //
+//This section has to do with the actual game being played!
+var startGame = function() {
+  console.log('The game is ready to start!');
+}
+//
+// these two event handlers are just to change the colour of the tile squares when you mouseover.
+$('.myBoardSquare').on('mouseover', function() {
+  $(this).css('background-color', '#e7e7e7');
+});
+$('.myBoardSquare').on('mouseout', function() {
+  $(this).css('background-color', '#ffffff');
+})
+// Mousover effect event handles ends.
+//
+
+//
+//===============
+// SECTION BREAK
+//===============
+//
+
+//
+// The code below is responsible for creating a synchronous array so the players can exchange moves during the game. This code was actually ripped from this tutorial: https://www.firebase.com/blog/2014-05-06-synchronized-arrays.html which means that I have not written functional purpose comments inside of them, see the aforementioned article for an explanation about how these work.
 function getSynchronizedArray(firebaseRef) {
   var list = [];
   syncChanges(list, firebaseRef);
+  wrapLocalCrudOps(list, firebaseRef);
   return list;
 }
+
 function syncChanges(list, ref) {
   ref.on('child_added', function _add(snap, prevChild) {
     var data = snap.val();
@@ -320,61 +363,75 @@ function syncChanges(list, ref) {
     var pos = positionAfter(list, prevChild);
     list.splice(pos, 0, data);
   });
+  ref.on('child_removed', function _remove(snap) {
+    var i = positionFor(list, snap.key());
+    if (i > -1) {
+      list.splice(i, 1);
+    }
+  });
+  ref.on('child_changed', function _change(snap) {
+    var i = positionFor(list, snap.key());
+    if (i > -1) {
+      list[i] = snap.val();
+      list[i].$id = snap.key(); // assumes data is always an object
+    }
+  });
+  ref.on('child_moved', function _move(snap, prevChild) {
+    var curPos = positionFor(list, snap.key());
+    if (curPos > -1) {
+      var data = list.splice(curPos, 1)[0];
+      var newPos = positionAfter(list, prevChild);
+      list.splice(newPos, 0, data);
+    }
+  });
 }
-// similar to indexOf, but uses id to find element
+
 function positionFor(list, key) {
-  for(var i = 0, len = list.length; i < len; i++) {
-    if( list[i].$id === key ) {
+  for (var i = 0, len = list.length; i < len; i++) {
+    if (list[i].$id === key) {
       return i;
     }
   }
   return -1;
 }
-// using the Firebase API's prevChild behavior, we
-// place each element in the list after it's prev
-// sibling or, if prevChild is null, at the beginning
+
 function positionAfter(list, prevChild) {
-  if( prevChild === null ) {
+  if (prevChild === null) {
     return 0;
-  }
-  else {
+  } else {
     var i = positionFor(list, prevChild);
-    if( i === -1 ) {
+    if (i === -1) {
       return list.length;
-    }
-    else {
-      return i+1;
-    }
-  }
-}
-//
-//
-// Sorcery Above
-//
-//
-
-$('.boardSquare').on('click', setupShips);
-
-$('.boardSquare').on('mouseover', function() {
-  $(this).css('background-color', '#e7e7e7');
-});
-$('.boardSquare').on('mouseout', function() {
-  $(this).css('background-color', '#ffffff');
-})
-
-var readyToPlay = function() {
-  if (!readyForData) {
-    if (myPlayerNumber === 0) {
-      var tempFire = new Firebase('https://shining-torch-1753.firebaseio.com/player_data/1/');
-      enemyData = getSynchronizedArray(tempFire);
-      enemyData = enemyData[0].theShips;
-    } else if (myPlayerNumber === 1) {
-      var tempFire = new Firebase('https://shining-torch-1753.firebaseio.com/player_data/0/');
-      enemyData = getSynchronizedArray(tempFire);
-      enemyData = enemyData[0].theShips;
     } else {
-      console.log('You are not a valid player');
+      return i + 1;
     }
   }
 }
 
+function wrapLocalCrudOps(list, firebaseRef) {
+    // we can hack directly on the array to provide some convenience methods
+    list.$add = function(data) {
+      return firebaseRef.push(data);
+    };
+    list.$remove = function(key) {
+      firebaseRef.child(key).remove();
+    };
+    list.$set = function(key, newData) {
+      // make sure we don't accidentally push our $id prop
+      if (newData.hasOwnProperty('$id')) {
+        delete newData.$id;
+      }
+      firebaseRef.child(key).set(newData);
+    };
+    list.$indexOf = function(key) {
+      return positionFor(list, key); // positionFor in examples above
+    }
+}
+// Synchronous array section ends.
+//
+
+//
+//===============
+// SECTION BREAK
+//===============
+//

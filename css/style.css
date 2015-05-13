@@ -48,7 +48,7 @@ em {
   font-weight: bold;
 }
 
-.boardSquare {
+.myBoardSquare {
   width: 60px;
   height: 60px;
   border: 1px solid black;
