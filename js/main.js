@@ -8,7 +8,6 @@ var currentShipLength = 5;
 var readyForData = false;
 var firebaseData;
 var enemyShips;
-
 //
 //===============
 // SECTION BREAK
@@ -20,9 +19,7 @@ var enemyShips;
 function assignPlayer() {
   //Function Purpose:
   //This function creates information for the player in the Firebase database so that their dataset reference can be accessed by the other player to determine a winner later. It also assigns the player number and enemy player number for use later in the program.
-  debugger;
   var gameRef = new Firebase('https://shining-torch-1753.firebaseio.com/player_data');
-  // var playerDataRef = gameRef.child('player_data');
   var gameTempArray = getSynchronizedArray(gameRef);
   setTimeout(function() {
     if (gameTempArray.length === 0) {
@@ -44,7 +41,7 @@ function assignPlayer() {
     } else {
       console.log('game is full, sorry.')
     }
-  }, 2000);
+  }, 1000);
 }
 
 assignPlayer();
@@ -328,6 +325,9 @@ var checkForStart = function() {
 //
 //This section has to do with the actual game being played!
 var startGame = function() {
+  //Function Purpose:
+  //
+  $('#moveInput').prop('readonly', false);
   console.log('The game is ready to start!');
 }
 //
