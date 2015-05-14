@@ -25,6 +25,7 @@ $(document).ready(function() {
   var enemyFive, enemyFour, enemyThree, enemyTwo;
   var myHits = [];
   var myTurns = [];
+  var buttonState = 0;
   //
   //===============
   // SECTION BREAK
@@ -383,7 +384,7 @@ $(document).ready(function() {
     var isItMyTurn = setInterval(function() {
       syncArray();
       checkLoss();
-      if (parseInt(firebaseData[3]) === 2) {
+      if (parseInt(firebaseData[2]) === 2) {
         clearInterval(isItMyTurn);
         return;
       }
@@ -420,7 +421,7 @@ $(document).ready(function() {
       $(tempPos).css('font-weight', 'bold');
     } else {
       $(tempPos).text('M');
-      $(tempPos).css('background-color', 'lightslategrey');
+      $(tempPos).css('background-color', '#F5D04C');
     }
 
   }
@@ -436,7 +437,9 @@ $(document).ready(function() {
           myHits.push($turn);
           checkSink($turn);
           if (checkVictory()) {
-            turnCheck();
+            setTimeout(function() {
+              turnCheck();
+            }, 3000);
             return;
           }
         } else {
@@ -556,20 +559,23 @@ $(document).ready(function() {
     var myHitsSort = myHits.sort();
     var enemyShipsSort = enemyShips.sort();
     if (myHitsSort.join('') === enemyShipsSort.join('')) {
+      syncArray();
       firebaseData.$set('Turn', '2');
       var audioBg = new Audio('media/WinningCharlie.mp3');
       setTimeout(function() {
         audioBg.play();
-      }, 8000);
+      }, 7000);
       $("<div><strong>CONGRATULATIONS! YOU WIN THE GAME!</strong></div>").appendTo('#statusLog')
       var tempHeight = $('#statusLog')[0].scrollHeight;
       $('#statusLog').scrollTop(tempHeight);
-      //include something here to end the game
-    } else {}
+      return true;
+    } else {
+      return false;
+    }
   }
 
   var checkLoss = function() {
-    //Functino Purpose:
+    //Function Purpose:
     //This function checks to see if the turn property has been set to 2 in the database. This variable can only be set to 2 if the other player has won the game.
     if (parseInt(firebaseData[2]) === 2) {
       $("<div><strong>Unfortunately, your opponent has sunk all your battleships... Thank you for playing!</strong></div>").appendTo('#statusLog')
@@ -607,9 +613,16 @@ $(document).ready(function() {
   //
 
   //
-  //This is the event handler for the button to swap between your own board and the enemy board.
+  //This is the event handler for the button to swap between your own board and the enemy board, the text of the button changes as well based on which board you are currently looking at.
   $('#swapBoard').on('click', function() {
     $('.myBoardSquare, .enemyBoardSquare').toggle();
+    if (buttonState === 0) {
+      $('#swapBoard').html('View Your Board');
+      buttonState = 1;
+    } else if (buttonState === 1) {
+      $('#swapBoard').html('View Enemy Board');
+      buttonState = 0;
+    }
   });
   //Event handler section end.
   //
