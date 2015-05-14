@@ -381,8 +381,6 @@ $(document).ready(function() {
       //This section has to do with the actual game being played!
       var startGame = function() {
         //Function Purpose:
-        //
-        //Function Purpose:
         //This function serves to set the initial values of true and false for who's turn it is and start the actual game through the turnCheck() function.
         $('#moveInput').prop('readonly', false);
         console.log('The game is ready to start!');
@@ -403,13 +401,16 @@ $(document).ready(function() {
         console.log(parseInt(firebaseData[2]) + ' ' + myPlayerNumber);
         var isItMyTurn = setInterval(function() {
           syncArray();
+          if (checkLoss()) {
+            clearInterval(isItMyTurn);
+          }
           if (parseInt(firebaseData[2]) === myPlayerNumber) {
             clearInterval(isItMyTurn);
             console.log('It is now your turn!');
             $("<div><strong>It's your turn!</strong></div>").appendTo('#messagesDiv')
             var tempHeight = $('#messagesDiv')[0].scrollHeight;
             $('#messagesDiv').scrollTop(tempHeight);
-            enableMyTurnHandlers();
+            registerTurn();
           } else {
             console.log('Waiting for opponents turn');
             $("<div>Waiting for your opponents turn</div>").appendTo('#messagesDiv')
@@ -420,16 +421,19 @@ $(document).ready(function() {
       }
 
       var syncArray = function() {
+        //Function Purpose:
+        //This function exists just to update the "synced" array, this has resolved a lot of the firebase issues for me.
         tempLocation = 'https://shining-torch-1753.firebaseio.com/player_data/';
         tempFirebase = new Firebase(tempLocation);
         firebaseData = getSynchronizedArray(tempFirebase);
       }
 
       var registerTurn = function() {
+        $('.enemyBoardSquare').on('click', function() {
         //Function Purpose:
         //This is a controller function to process the players input, it checks the turn is valid and then if it registered a successful hit before setting the other player's turn up.
-        var $turn = $('#moveInput').val();
-        $turn = $turn.toLowerCase();
+        console.log($(this).attr('id').slice(1));
+        var $turn = $(this).attr('id').slice(1);
         if (validTurn($turn)) {
           if (checkHit($turn)) {
             myTurns.push($turn);
@@ -441,8 +445,7 @@ $(document).ready(function() {
             myTurns.push($turn);
           }
           console.log(firebaseData);
-          $('#moveInput').off();
-          $('#attackButton').off();
+          $('.enemyBoardSquare').off();
           firebaseData.$set('Turn', enemyPlayerNumber.toString());
           setTimeout(function() {
             console.log(firebaseData[2])
@@ -452,12 +455,10 @@ $(document).ready(function() {
           return;
         } else {
           console.log('not a valid turn, please enter in the format of a-h + 1-8, e.g. b4 or h8');
-          $("<div>not a valid turn, please enter in the format of a-h + 1-8, e.g. b4 or h8</div>").appendTo('#messagesDiv')
-            var tempHeight = $('#messagesDiv')[0].scrollHeight;
-            $('#messagesDiv').scrollTop(tempHeight);
           return;
         }
-      }
+      });
+    };
 
       var checkHit = function(playerInput) {
         //Function Purpose:
@@ -471,6 +472,7 @@ $(document).ready(function() {
             var tempID = '#e' + playerInput;
             $(tempID).text('H');
             $(tempID).css('background-color', 'red');
+            $current = 'red';
             $(tempID).css('font-weight', 'bold');
             return true;
           }
@@ -482,6 +484,7 @@ $(document).ready(function() {
         var tempID = '#e' + playerInput;
         $(tempID).text('M');
         $(tempID).css('background-color', 'white');
+        $current = 'white';
         return false;
       }
 
@@ -521,7 +524,7 @@ $(document).ready(function() {
               currentShip = undefined;
             }
           }
-        }
+        };
       
 
         var checkVictory = function() {
@@ -534,11 +537,25 @@ $(document).ready(function() {
             $("<div><strong>CONGRATULATIONS! YOU WIN THE GAME!</strong></div>").appendTo('#messagesDiv')
             var tempHeight = $('#messagesDiv')[0].scrollHeight;
             $('#messagesDiv').scrollTop(tempHeight);
+            firebaseData.$set('Turn', '2');
             //include something here to end the game
           } else {
             console.log('The enemy player still has live battleships...');
           }
         }
+
+        var checkLoss = function() {
+          //Functino Purpose:
+          //This function checks to see if the turn property has been set to 2 in the database. This variable can only be set to 2 if the other player has won the game.
+          if (firebaseData[2] === '2') {
+            $("<div><strong>Unfortunately, your opponent has sunk all your battleships... Thank you for playing!</strong></div>").appendTo('#messagesDiv')
+            var tempHeight = $('#messagesDiv')[0].scrollHeight;
+            $('#messagesDiv').scrollTop(tempHeight);  
+            return true;
+          } else {
+            return false;
+          }
+        };
 
         var validTurn = function(playerInput) {
           //Function Purpose:
@@ -556,19 +573,8 @@ $(document).ready(function() {
           }
           return false;
         };
-
-        var enableMyTurnHandlers = function() {
-            //Function Purpose:
-            //This function is solely responsible for setting up the required event handlers so the current player can take their turn.
-            $('#moveInput').keypress(function(e) {
-              if (e.keyCode == 13) {
-                registerTurn();
-              }
-            });
-            $('#attackButton').on('click', registerTurn);
-          }
-          //This is the end of the actual game section.
-          //
+        //This is the end of the actual game section.
+        //
 
         //
         //===============
@@ -583,6 +589,19 @@ $(document).ready(function() {
           $(this).css('background-color', '#e7e7e7');
         });
         $('.myBoardSquare').on('mouseout', function() {
+            if ($current) {
+              $(this).css('background-color', $current);
+            } else {
+              $(this).css('background-color', '#ffffff');
+            }
+            $current = undefined;
+        });
+        
+        $('.enemyBoardSquare').on('mouseover', function() {
+          $current = $(this).css('background-color');
+          $(this).css('background-color', '#e7e7e7');
+        });
+        $('.enemyBoardSquare').on('mouseout', function() {
             if ($current) {
               $(this).css('background-color', $current);
             } else {
