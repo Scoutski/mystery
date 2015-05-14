@@ -1,6 +1,8 @@
 BATTLESHIPS!
 ============
 
+### Contents:
+
 1. Introduction and Background
 2. Versions
 3. User Guide
@@ -31,6 +33,8 @@ I went over the development of this project on my personal WDI blog which can be
 ------------
 
 v1.0: The first working version of this project was released on Thursday, 14 May 2015. It involved all the functionality outlined above and had a very basic user interface.
+
+v1.1: Several hours after the first release, I have added a few simple design elements, some box shadows, a fade in animation for the h1 and an additional sound for when a hit is scored.
 
 Future Versions:
 Although I am undecided on whether I will continue this project, additional functionality may include:

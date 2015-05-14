@@ -521,6 +521,8 @@ $(document).ready(function() {
           var enemyShipsSort = enemyShips.sort();
           if (myHitsSort.join('') === enemyShipsSort.join('')) {
             firebaseData.$set('Turn', '2');
+            var audioBg = new Audio('media/WinningCharlie.mp3');
+            audioBg.play();
             $("<div><strong>CONGRATULATIONS! YOU WIN THE GAME!</strong></div>").appendTo('#statusLog')
             var tempHeight = $('#statusLog')[0].scrollHeight;
             $('#statusLog').scrollTop(tempHeight);
