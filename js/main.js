@@ -102,7 +102,7 @@ $(document).ready(function() {
       });
 
       function displayChatMessage(time, name, text) {
-        $('<div/>').text(text).prepend($('<em/>').text(time + ' - ' + name + ': ')).appendTo($('#messagesDiv'));
+        $('<div/>').text(text).prepend($('<strong/>').text(time + ' - ' + name + ': ')).appendTo($('#messagesDiv'));
         $('#messagesDiv')[0].scrollTop = $('#messagesDiv')[0].scrollHeight;
       };
 
@@ -130,7 +130,7 @@ $(document).ready(function() {
         for (var i = 0; i < 8; i++) {
           var tempArray = [];
           for (var j = 1; j < 9; j++) {
-            var $cell = $('<div></div>').attr('id', (letters[i] + j)).addClass('myBoardSquare').appendTo('#boardDiv');
+            var $cell = $('<div></div>').attr('id', (letters[i] + j)).addClass('myBoardSquare').addClass('grow').appendTo('#boardDiv');
             $cell.text(($cell.attr('id').toUpperCase()));
             tempArray.push(letters[i] + j);
           }
@@ -142,7 +142,7 @@ $(document).ready(function() {
         for (var i = 0; i < 8; i++) {
           var tempArray = [];
           for (var j = 1; j < 9; j++) {
-            var $cell = $('<div></div>').attr('id', 'e' + (letters[i] + j)).addClass('enemyBoardSquare').appendTo('#boardDiv');
+            var $cell = $('<div></div>').attr('id', 'e' + (letters[i] + j)).addClass('enemyBoardSquare').addClass('grow').appendTo('#boardDiv');
             $cell.text(($cell.attr('id').slice(1).toUpperCase()));
             tempArray.push(letters[i] + j);
           }
@@ -458,6 +458,8 @@ $(document).ready(function() {
         for (var i = 0; i < enemyShips.length; i++) {
           if (enemyShips[i] === playerInput) {
             firebaseData.$set('status', 'hit')
+            var audioBg = new Audio('media/Hit.mp3');
+            audioBg.play();
             $("<div><strong>Shooting at " + playerInput + ", Hit! </strong></div>").appendTo('#statusLog')
             var tempHeight = $('#statusLog')[0].scrollHeight;
             $('#statusLog').scrollTop(tempHeight);
@@ -503,7 +505,9 @@ $(document).ready(function() {
               $("<div><strong>You sunk a battleship!</strong></div>").appendTo('#statusLog')
             var tempHeight = $('#statusLog')[0].scrollHeight;
             $('#statusLog').scrollTop(tempHeight);
-              audioBg.play();
+              setTimeout(function() {
+                audioBg.play();
+              }, 3000);
               currentShip = undefined;
             }
           }
