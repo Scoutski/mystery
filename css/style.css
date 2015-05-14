@@ -67,7 +67,11 @@ em {
   float: left;
   font-size: 30px;
   display: none;
-  background-color: #ADD8E6;
   line-height: 60px;
   text-align: center;
+  background-color: #ADD8E6;
+}
+
+.enemyBoardSquare:hover {
+  background-color: #e7e7e7;
 }

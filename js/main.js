@@ -140,7 +140,6 @@ $(document).ready(function() {
         }
       }
 
-
       var createEnemyBoard = function() {
         for (var i = 0; i < 8; i++) {
           var tempArray = [];
@@ -472,8 +471,8 @@ $(document).ready(function() {
             var tempID = '#e' + playerInput;
             $(tempID).text('H');
             $(tempID).css('background-color', 'red');
-            $current = 'red';
             $(tempID).css('font-weight', 'bold');
+            $current = 'red';
             return true;
           }
         }
@@ -596,19 +595,19 @@ $(document).ready(function() {
             }
             $current = undefined;
         });
-        
-        $('.enemyBoardSquare').on('mouseover', function() {
-          $current = $(this).css('background-color');
-          $(this).css('background-color', '#e7e7e7');
-        });
-        $('.enemyBoardSquare').on('mouseout', function() {
-            if ($current) {
-              $(this).css('background-color', $current);
-            } else {
-              $(this).css('background-color', '#ffffff');
-            }
-            $current = undefined;
-        });
+
+        // $('.enemyBoardSquare').on('mouseover', function() {
+        //   $current = $(this).css('background-color');
+        //   $(this).css('background-color', '#e7e7e7');
+        // });
+        // $('.enemyBoardSquare').on('mouseout', function() {
+        //     if ($current) {
+        //       $(this).css('background-color', $current);
+        //     } else {
+        //       $(this).css('background-color', '#ADD8E6');
+        //     }
+        //     $current = undefined;
+        // });
         $('#swapBoard').on('click', function() {
           $('.myBoardSquare, .enemyBoardSquare').toggle();
         });
