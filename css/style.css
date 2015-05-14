@@ -97,6 +97,10 @@ body {
   margin: 2px;
 }
 
+#messageInput {
+  width: 246px;
+}
+
 .textLabels {
   margin-bottom: 0px;
   z-index: 1;
