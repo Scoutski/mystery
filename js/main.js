@@ -1,3 +1,12 @@
+//██████╗  █████╗ ████████╗████████╗██╗     ███████╗███████╗██╗  ██╗██╗██████╗ ███████╗
+//██╔══██╗██╔══██╗╚══██╔══╝╚══██╔══╝██║     ██╔════╝██╔════╝██║  ██║██║██╔══██╗██╔════╝
+//██████╔╝███████║   ██║      ██║   ██║     █████╗  ███████╗███████║██║██████╔╝███████╗
+//██╔══██╗██╔══██║   ██║      ██║   ██║     ██╔══╝  ╚════██║██╔══██║██║██╔═══╝ ╚════██║
+//██████╔╝██║  ██║   ██║      ██║   ███████╗███████╗███████║██║  ██║██║██║     ███████║
+//╚═════╝ ╚═╝  ╚═╝   ╚═╝      ╚═╝   ╚══════╝╚══════╝╚══════╝╚═╝  ╚═╝╚═╝╚═╝     ╚══════╝
+//
+// v1.0 Please see http://www.github.com/Scoutski/mystery/ for information about this release.
+
 $(document).ready(function() {
 
       var myPlayerNumber = undefined;
@@ -8,7 +17,6 @@ $(document).ready(function() {
       var enemyArray = [];
       var myShips = [];
       var currentShipLength = 5;
-      var readyForData = false;
       var tempLocation;
       var tempFirebase;
       var firebaseData;
@@ -16,7 +24,6 @@ $(document).ready(function() {
       var enemyFive, enemyFour, enemyThree, enemyTwo;
       var myHits = [];
       var myTurns = [];
-      var app = angular.module("sampleApp", ["firebase"]);
       //
       //===============
       // SECTION BREAK
@@ -160,6 +167,9 @@ $(document).ready(function() {
           
           //Function purpose:
           //This function handles clicks at the start of the game while ships are being placed on the board. It determines the outer array index and inner array index so they can be passed to the required functions for ship placement.
+          $("<div>Welcome to the game <strong>" + name + "</strong>, select the tiles to place your ships!</div>").appendTo('#statusLog')
+          var tempHeight = $('#statusLog')[0].scrollHeight;
+          $('#statusLog').scrollTop(tempHeight);
           $('.myBoardSquare').on('click', function() {
           var $boardID = $(this).attr('id').split('');
           var rowIndex = letters.indexOf($boardID[0]);
@@ -183,9 +193,9 @@ $(document).ready(function() {
         //Function Purpose:
         //This function determines if all the ships have been placed and runs automatically 
         if (currentShipLength < 2) {
-          $("<div>All of your ships have been placed!</div>").appendTo('#messagesDiv')
-          var tempHeight = $('#messagesDiv')[0].scrollHeight;
-          $('#messagesDiv').scrollTop(tempHeight);
+          $("<div>All of your ships have been placed!</div>").appendTo('#statusLog')
+          var tempHeight = $('#statusLog')[0].scrollHeight;
+          $('#statusLog').scrollTop(tempHeight);
           $('.myBoardSquare').off('click');
           pushShipsToFirebase();
           checkForStart();
@@ -250,9 +260,9 @@ $(document).ready(function() {
         //Should ensure that no other ships are on any of the squares that this ship plans to occupy on the board horizontally.
         for (var i = 0; i < shipLength; i++) {
           if ($('#' + (boardArray[rIndex][sIndex + i])).text() === 'O') {
-            $('<div>There is a ship in the way! Try somewhere else.</div>').appendTo('#messagesDiv')
-            var tempHeight = $('#messagesDiv')[0].scrollHeight;
-            $('#messagesDiv').scrollTop(tempHeight);
+            $('<div>There is a ship in the way! Try somewhere else.</div>').appendTo('#statusLog')
+            var tempHeight = $('#statusLog')[0].scrollHeight;
+            $('#statusLog').scrollTop(tempHeight);
             return false;
           }
         }
@@ -264,9 +274,9 @@ $(document).ready(function() {
         //Should ensure that no other ships are on any of the squares that this ship plans to occupy on the board vertically.
         for (var i = 0; i < shipLength; i++) {
           if ($('#' + (boardArray[rIndex + i][cIndex])).text() === 'O') {
-            $('<div>There is a ship in the way! Try somewhere else.</div>').appendTo('#messagesDiv')
-            var tempHeight = $('#messagesDiv')[0].scrollHeight;
-            $('#messagesDiv').scrollTop(tempHeight);
+            $('<div>There is a ship in the way! Try somewhere else.</div>').appendTo('#statusLog')
+            var tempHeight = $('#statusLog')[0].scrollHeight;
+            $('#statusLog').scrollTop(tempHeight);
             return false;
           }
         }
@@ -279,9 +289,9 @@ $(document).ready(function() {
         if (cIndex + shipLength <= 8) {
           return true;
         } else {
-          $("<div>The ship won't fit here!.</div>").appendTo('#messagesDiv')
-            var tempHeight = $('#messagesDiv')[0].scrollHeight;
-            $('#messagesDiv').scrollTop(tempHeight);
+          $("<div>The ship won't fit here!.</div>").appendTo('#statusLog')
+            var tempHeight = $('#statusLog')[0].scrollHeight;
+            $('#statusLog').scrollTop(tempHeight);
           return false;
         }
       }
@@ -292,9 +302,9 @@ $(document).ready(function() {
         if (rIndex + shipLength <= 8) {
           return true;
         } else {
-          $("<div>The ship won't fit here!.</div>").appendTo('#messagesDiv')
-            var tempHeight = $('#messagesDiv')[0].scrollHeight;
-            $('#messagesDiv').scrollTop(tempHeight);
+          $("<div>The ship won't fit here!.</div>").appendTo('#statusLog')
+            var tempHeight = $('#statusLog')[0].scrollHeight;
+            $('#statusLog').scrollTop(tempHeight);
           return false;
         }
       }
@@ -313,9 +323,9 @@ $(document).ready(function() {
             startGame();
             return;
           } else {
-            $("<div>Still waiting on your opponent to get ready...</div>").appendTo('#messagesDiv')
-            var tempHeight = $('#messagesDiv')[0].scrollHeight;
-            $('#messagesDiv').scrollTop(tempHeight);
+            $("<div>Still waiting on your opponent to get ready...</div>").appendTo('#statusLog')
+            var tempHeight = $('#statusLog')[0].scrollHeight;
+            $('#statusLog').scrollTop(tempHeight);
           }
         }, 3000);
       }
@@ -356,9 +366,9 @@ $(document).ready(function() {
         //Function Purpose:
         //This function serves to set the initial values of true and false for who's turn it is and start the actual game through the turnCheck() function.
         $('#moveInput').prop('readonly', false);
-        $("<div>Your opponent is ready! Starting game!</div>").appendTo('#messagesDiv')
-            var tempHeight = $('#messagesDiv')[0].scrollHeight;
-            $('#messagesDiv').scrollTop(tempHeight);
+        $("<div>Your opponent is ready! Starting game!</div>").appendTo('#statusLog')
+            var tempHeight = $('#statusLog')[0].scrollHeight;
+            $('#statusLog').scrollTop(tempHeight);
         tempLocation = 'https://shining-torch-1753.firebaseio.com/player_data/';
         tempFirebase = new Firebase(tempLocation);
         firebaseData = getSynchronizedArray(tempFirebase);
@@ -381,14 +391,14 @@ $(document).ready(function() {
             if (firebaseData[3]) {
               registerEnemyTurn();
             }
-            $("<div><strong>It's your turn!</strong></div>").appendTo('#messagesDiv')
-            var tempHeight = $('#messagesDiv')[0].scrollHeight;
-            $('#messagesDiv').scrollTop(tempHeight);
+            $("<div><strong>It's your turn!</strong></div>").appendTo('#statusLog')
+            var tempHeight = $('#statusLog')[0].scrollHeight;
+            $('#statusLog').scrollTop(tempHeight);
             registerTurn();
           } else {
-            $("<div>Waiting for your opponents turn</div>").appendTo('#messagesDiv')
-            var tempHeight = $('#messagesDiv')[0].scrollHeight;
-            $('#messagesDiv').scrollTop(tempHeight);
+            $("<div>Waiting for your opponents turn</div>").appendTo('#statusLog')
+            var tempHeight = $('#statusLog')[0].scrollHeight;
+            $('#statusLog').scrollTop(tempHeight);
           }
         }, 3000)
       }
@@ -448,9 +458,9 @@ $(document).ready(function() {
         for (var i = 0; i < enemyShips.length; i++) {
           if (enemyShips[i] === playerInput) {
             firebaseData.$set('status', 'hit')
-            $("<div><strong>Hit!</strong></div>").appendTo('#messagesDiv')
-            var tempHeight = $('#messagesDiv')[0].scrollHeight;
-            $('#messagesDiv').scrollTop(tempHeight);
+            $("<div><strong>Shooting at " + playerInput + ", Hit! </strong></div>").appendTo('#statusLog')
+            var tempHeight = $('#statusLog')[0].scrollHeight;
+            $('#statusLog').scrollTop(tempHeight);
             var tempID = '#e' + playerInput;
             $(tempID).text('H');
             $(tempID).css('background-color', 'red');
@@ -459,9 +469,9 @@ $(document).ready(function() {
           }
         }
         firebaseData.$set('status', 'miss')
-        $("<div>Miss...</div>").appendTo('#messagesDiv')
-        var tempHeight = $('#messagesDiv')[0].scrollHeight;
-        $('#messagesDiv').scrollTop(tempHeight);
+        $("<div>Shooting at " + playerInput + ", Miss...</div>").appendTo('#statusLog')
+        var tempHeight = $('#statusLog')[0].scrollHeight;
+        $('#statusLog').scrollTop(tempHeight);
         var tempID = '#e' + playerInput;
         $(tempID).text('M');
         $(tempID).css('background-color', 'white');
@@ -490,9 +500,9 @@ $(document).ready(function() {
           }
             if (sinkCount === currentShip.length) {
               var audioBg = new Audio('media/sunkBattleship.mp3');
-              $("<div><strong>You sunk a battleship!</strong></div>").appendTo('#messagesDiv')
-            var tempHeight = $('#messagesDiv')[0].scrollHeight;
-            $('#messagesDiv').scrollTop(tempHeight);
+              $("<div><strong>You sunk a battleship!</strong></div>").appendTo('#statusLog')
+            var tempHeight = $('#statusLog')[0].scrollHeight;
+            $('#statusLog').scrollTop(tempHeight);
               audioBg.play();
               currentShip = undefined;
             }
@@ -507,9 +517,9 @@ $(document).ready(function() {
           var enemyShipsSort = enemyShips.sort();
           if (myHitsSort.join('') === enemyShipsSort.join('')) {
             firebaseData.$set('Turn', '2');
-            $("<div><strong>CONGRATULATIONS! YOU WIN THE GAME!</strong></div>").appendTo('#messagesDiv')
-            var tempHeight = $('#messagesDiv')[0].scrollHeight;
-            $('#messagesDiv').scrollTop(tempHeight);
+            $("<div><strong>CONGRATULATIONS! YOU WIN THE GAME!</strong></div>").appendTo('#statusLog')
+            var tempHeight = $('#statusLog')[0].scrollHeight;
+            $('#statusLog').scrollTop(tempHeight);
             //include something here to end the game
           } else {
           }
@@ -519,9 +529,9 @@ $(document).ready(function() {
           //Functino Purpose:
           //This function checks to see if the turn property has been set to 2 in the database. This variable can only be set to 2 if the other player has won the game.
           if (parseInt(firebaseData[2]) === 2) {
-            $("<div><strong>Unfortunately, your opponent has sunk all your battleships... Thank you for playing!</strong></div>").appendTo('#messagesDiv')
-            var tempHeight = $('#messagesDiv')[0].scrollHeight;
-            $('#messagesDiv').scrollTop(tempHeight);  
+            $("<div><strong>Unfortunately, your opponent has sunk all your battleships... Thank you for playing!</strong></div>").appendTo('#statusLog')
+            var tempHeight = $('#statusLog')[0].scrollHeight;
+            $('#statusLog').scrollTop(tempHeight);  
             return;
           } else {
             return;

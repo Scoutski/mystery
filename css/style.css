@@ -31,7 +31,19 @@
 
 #messagesDiv {
   overflow-y: scroll;
-  height: 480px;
+  height: 204px;
+  border: 1px solid black;
+  margin-bottom: 5px;
+  font-size: 15px;
+}
+
+.textLabels {
+  margin-bottom: 0px;
+}
+
+#statusLog {
+  overflow-y: scroll;
+  height: 205px;
   border: 1px solid black;
   margin-bottom: 5px;
   font-size: 15px;
