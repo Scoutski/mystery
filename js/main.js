@@ -503,7 +503,7 @@ $(document).ready(function() {
       }
       if (sinkCount === currentShip.length) {
         var audioBg = new Audio('media/sunkBattleship.mp3');
-        sinkShipMessage();
+        sinkShipMessage(currentShip.length);
         // $("<div><strong>You sunk a battleship!</strong></div>").appendTo('#statusLog')
         // var tempHeight = $('#statusLog')[0].scrollHeight;
         // $('#statusLog').scrollTop(tempHeight);
