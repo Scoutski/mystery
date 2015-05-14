@@ -68,15 +68,15 @@ The game will alternate between players who can check both boards to see their o
 
 Once one player has sunk all their opponents ships, they will be notified via the console and the game will be considered over.
 
-Testing:
---------
+4. Testing:
+----------
 
 There are a few known issues with this game that may be addressed in a future version. At times there are connection issues with the Firebase database which can render the game unplayable, these have been minimized through the use of timeout functions that allow the server more time to get ready.
 
 As the project was only created within four days, testing has not been completed thoroughly enough to suggest that everything is working completely as intended. That said, I tried very hard to test a lot of different scenarios and tried to break the game logic and fixed all known issues.
 
-Related Resources:
-------------------
+5. Related Resources:
+---------------------
 
 Please see any of the following links for more information about the components of this project and some of the related resources that were used and referenced in the creation of this project:
 
