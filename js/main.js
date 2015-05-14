@@ -371,14 +371,16 @@ $(document).ready(function() {
         //This function checks every few seconds if it is now the local players turn based on 
         var isItMyTurn = setInterval(function() {
           syncArray();
-          if (firebaseData[3]) {
-            registerEnemyTurn();
-          }
-          if (checkLoss()) {
+          checkLoss();
+          if (parseInt(firebaseData[3]) === 2) {
             clearInterval(isItMyTurn);
+            return;
           }
           if (parseInt(firebaseData[2]) === myPlayerNumber) {
             clearInterval(isItMyTurn);
+            if (firebaseData[3]) {
+              registerEnemyTurn();
+            }
             $("<div><strong>It's your turn!</strong></div>").appendTo('#messagesDiv')
             var tempHeight = $('#messagesDiv')[0].scrollHeight;
             $('#messagesDiv').scrollTop(tempHeight);
@@ -407,7 +409,7 @@ $(document).ready(function() {
           $(tempPos).css('font-weight', 'bold');
         } else {
           $(tempPos).text('M');
-          $(tempPos).css('background-color', 'white');
+          $(tempPos).css('background-color', 'lightslategrey');
         }
         
       }
@@ -504,10 +506,10 @@ $(document).ready(function() {
           var myHitsSort = myHits.sort();
           var enemyShipsSort = enemyShips.sort();
           if (myHitsSort.join('') === enemyShipsSort.join('')) {
+            firebaseData.$set('Turn', '2');
             $("<div><strong>CONGRATULATIONS! YOU WIN THE GAME!</strong></div>").appendTo('#messagesDiv')
             var tempHeight = $('#messagesDiv')[0].scrollHeight;
             $('#messagesDiv').scrollTop(tempHeight);
-            firebaseData.$set('Turn', '2');
             //include something here to end the game
           } else {
           }
@@ -516,13 +518,13 @@ $(document).ready(function() {
         var checkLoss = function() {
           //Functino Purpose:
           //This function checks to see if the turn property has been set to 2 in the database. This variable can only be set to 2 if the other player has won the game.
-          if (firebaseData[2] === '2') {
+          if (parseInt(firebaseData[2]) === 2) {
             $("<div><strong>Unfortunately, your opponent has sunk all your battleships... Thank you for playing!</strong></div>").appendTo('#messagesDiv')
             var tempHeight = $('#messagesDiv')[0].scrollHeight;
             $('#messagesDiv').scrollTop(tempHeight);  
-            return true;
+            return;
           } else {
-            return false;
+            return;
           }
         };
 
