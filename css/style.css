@@ -55,4 +55,19 @@ em {
   display: inline-block;
   float: left;
   font-size: 30px;
+  line-height: 60px;
+  text-align: center;
+}
+
+.enemyBoardSquare {
+  width: 60px;
+  height: 60px;
+  border: 1px solid black;
+  display: inline-block;
+  float: left;
+  font-size: 30px;
+  display: none;
+  background-color: #ADD8E6;
+  line-height: 60px;
+  text-align: center;
 }
