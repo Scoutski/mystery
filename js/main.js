@@ -435,7 +435,10 @@ $(document).ready(function() {
           myTurns.push($turn);
           myHits.push($turn);
           checkSink($turn);
-          checkVictory();
+          if (checkVictory()) {
+            turnCheck();
+            return;
+          }
         } else {
           myTurns.push($turn);
         }
@@ -555,7 +558,9 @@ $(document).ready(function() {
     if (myHitsSort.join('') === enemyShipsSort.join('')) {
       firebaseData.$set('Turn', '2');
       var audioBg = new Audio('media/WinningCharlie.mp3');
-      audioBg.play();
+      setTimeout(function() {
+        audioBg.play();
+      }, 8000);
       $("<div><strong>CONGRATULATIONS! YOU WIN THE GAME!</strong></div>").appendTo('#statusLog')
       var tempHeight = $('#statusLog')[0].scrollHeight;
       $('#statusLog').scrollTop(tempHeight);
