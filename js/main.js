@@ -17,7 +17,6 @@ $(document).ready(function() {
       var myHits = [];
       var myTurns = [];
       var app = angular.module("sampleApp", ["firebase"]);
-      var $current;
       //
       //===============
       // SECTION BREAK
@@ -226,7 +225,6 @@ $(document).ready(function() {
           for (var i = 0; i < currentShip; i++) {
             $('#' + boardArray[rIndex][cIndex + i]).text('O');
             $('#' + boardArray[rIndex][cIndex + i]).css('background-color', 'grey');
-            $current = 'grey';
             tempShip.push(boardArray[rIndex][cIndex + i]);
           }
           myShips.push(tempShip);
@@ -248,7 +246,6 @@ $(document).ready(function() {
           for (var i = 0; i < currentShip; i++) {
             $('#' + boardArray[rIndex + i][cIndex]).text('O');
             $('#' + boardArray[rIndex + i][cIndex]).css('background-color', 'grey');
-            $current = 'grey';
             tempShip.push(boardArray[rIndex + i][cIndex]);
           }
           myShips.push(tempShip);
@@ -472,7 +469,6 @@ $(document).ready(function() {
             $(tempID).text('H');
             $(tempID).css('background-color', 'red');
             $(tempID).css('font-weight', 'bold');
-            $current = 'red';
             return true;
           }
         }
@@ -483,7 +479,6 @@ $(document).ready(function() {
         var tempID = '#e' + playerInput;
         $(tempID).text('M');
         $(tempID).css('background-color', 'white');
-        $current = 'white';
         return false;
       }
 
@@ -582,36 +577,11 @@ $(document).ready(function() {
         //
 
         //
-        // these two event handlers are just to change the colour of the tile squares when you mouseover.
-        $('.myBoardSquare').on('mouseover', function() {
-          $current = $(this).css('background-color');
-          $(this).css('background-color', '#e7e7e7');
-        });
-        $('.myBoardSquare').on('mouseout', function() {
-            if ($current) {
-              $(this).css('background-color', $current);
-            } else {
-              $(this).css('background-color', '#ffffff');
-            }
-            $current = undefined;
-        });
-
-        // $('.enemyBoardSquare').on('mouseover', function() {
-        //   $current = $(this).css('background-color');
-        //   $(this).css('background-color', '#e7e7e7');
-        // });
-        // $('.enemyBoardSquare').on('mouseout', function() {
-        //     if ($current) {
-        //       $(this).css('background-color', $current);
-        //     } else {
-        //       $(this).css('background-color', '#ADD8E6');
-        //     }
-        //     $current = undefined;
-        // });
+        //This is the event handler for the button to swap between your own board and the enemy board.
         $('#swapBoard').on('click', function() {
           $('.myBoardSquare, .enemyBoardSquare').toggle();
         });
-        // Mousover effect event handles ends.
+        //Event handler section end.
         //
 
         //
