@@ -11,13 +11,10 @@ body {
   text-align: center;
   letter-spacing: 5px;
   font-family: 'Open Sans', sans-serif;
-  /*  border: 1px solid black;*/
 }
 
 .animated {
   -webkit-animation-delay: 2s;
-  /* Chrome, Safari, Opera */
-  
   animation-delay: 2s;
   -webkit-animation-duration: 5s;
   animation-duration: 5s;
@@ -53,14 +50,10 @@ body {
 }
 
 #messenger {
-  /*  border: 1px solid black;*/
-  
   height: 600px;
 }
 
 #content {
-  /*  border: 1px solid black;*/
-  
   height: 600px;
   text-align: center;
 }

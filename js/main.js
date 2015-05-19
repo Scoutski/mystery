@@ -5,7 +5,7 @@
 //██████╔╝██║  ██║   ██║      ██║   ███████╗███████╗███████║██║  ██║██║██║     ███████║
 //╚═════╝ ╚═╝  ╚═╝   ╚═╝      ╚═╝   ╚══════╝╚══════╝╚══════╝╚═╝  ╚═╝╚═╝╚═╝     ╚══════╝
 //
-// v1.0 Please see http://www.github.com/Scoutski/mystery/ for information about this release.
+// v1.1 Please see http://www.github.com/Scoutski/mystery/ for information about this release.
 
 $(document).ready(function() {
 
@@ -352,9 +352,9 @@ $(document).ready(function() {
       for (var i = 0; i < enemyTwo.length; i++) {
         enemyShips.push(enemyTwo[i]);
       }
-    }
-    //End of game set up functions.
-    //
+  }
+  //End of game set up functions.
+  //
 
   //
   //===============
@@ -423,7 +423,6 @@ $(document).ready(function() {
       $(tempPos).text('M');
       $(tempPos).css('background-color', '#F5D04C');
     }
-
   }
 
   var registerTurn = function() {
